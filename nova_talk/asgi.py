@@ -10,13 +10,17 @@ os.environ.setdefault("DJANGO_SETTINGS_MODULE", "nova_talk.settings")
 # is populated before importing code that may import ORM models.
 django_asgi_app = get_asgi_application()
 
+from django.urls import path, re_path
+
+from chat.consumers import ChatConsumer
 import chat.routing
 
-application = ProtocolTypeRouter(
-    {
-        "http": django_asgi_app,
-        "websocket": AllowedHostsOriginValidator(
-            AuthMiddlewareStack(URLRouter(chat.routing.websocket_urlpatterns))
-        ),
-    }
-)
+application = ProtocolTypeRouter({
+    'websocket': AllowedHostsOriginValidator(
+        AuthMiddlewareStack(
+            URLRouter([
+                    path('ws/messenger/<room_id>/', ChatConsumer.as_asgi()), 
+            ])
+        )
+    ),
+})
